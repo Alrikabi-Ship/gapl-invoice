@@ -1,11 +1,11 @@
-
 import streamlit as st
 import qrcode
 from io import BytesIO
 from fpdf import FPDF
 from PIL import Image
 
-st.set_page_config(page_title="فاتورة GAPL", page_icon=":receipt:", layout="centered")
+# إعداد الصفحة
+st.set_page_config(page_title="نموذج توليد فاتورة GAPL")
 st.title("نموذج توليد فاتورة PDF - GAPL")
 st.markdown("املأ البيانات التالية لتوليد فاتورة رسمية بصيغة PDF")
 
@@ -19,22 +19,24 @@ payment_date = st.date_input("تاريخ الدفع")
 amount_paid = st.text_input("المبلغ المدفوع")
 total_amount = st.text_input("إجمالي الصفقة")
 balance = st.text_input("الرصيد المتبقي")
-status = st.selectbox("حالة الصفقة", ["قيد التنفيذ", "مكتملة", "ملغية"])
+status = st.selectbox("حالة الصفقة", ["قيد التنفيذ", "مدفوعة", "ملغاة"])
 notes = st.text_area("ملاحظات")
 
+# توليد الفاتورة
 if st.button("توليد الفاتورة"):
     pdf = FPDF()
     pdf.add_page()
-    pdf.add_font("Arial", "", fname="arial.ttf", uni=True)
+
+    # إضافة الخط العربي
+    pdf.add_font("Arial", "", "arial.ttf", uni=True)
     pdf.set_font("Arial", size=14)
 
-    # إضافة الشعار
-    pdf.image("gapl_logo.png", x=80, w=50)
+    # عنوان
+    pdf.cell(0, 10, "شركة GAPL", ln=True, align='C')
+    pdf.cell(0, 10, "فاتورة صفقة", ln=True, align='C')
     pdf.ln(10)
 
-    pdf.cell(0, 10, "فاتورة صفقة", ln=True, align="C")
-    pdf.ln(10)
-
+    # بيانات الفاتورة
     def row(label, value):
         pdf.cell(60, 10, label, border=1)
         pdf.cell(0, 10, value, border=1, ln=True)
@@ -51,23 +53,22 @@ if st.button("توليد الفاتورة"):
     row("حالة الصفقة", status)
     row("ملاحظات", notes)
 
-    # QR Code
-    msg = f"فاتورة GAPL من التاجر: {dealer}\nنوع السيارة: {car_type}\nالمبلغ: {amount_paid}"
+    # QR code
+    msg = f"فاتورة GAPL:\nالتاجر: {dealer}\nنوع السيارة: {car_type}\nالمبلغ: {amount_paid}"
     qr = qrcode.make(msg)
     qr_bytes = BytesIO()
-    qr.save(qr_bytes)
+    qr.save(qr_bytes, format="PNG")
     qr_bytes.seek(0)
     pdf.image(qr_bytes, x=80, w=50)
-    pdf.ln(10)
 
+    pdf.ln(10)
     pdf.cell(0, 10, "قسم: مدير قسم الاستيراد", ln=True)
 
-    output = BytesIO()
-    pdf.output(output)
-    st.download_button("تحميل الفاتورة PDF", data=output.getvalue(), file_name="invoice.pdf")
+    # حفظ الفاتورة
+    pdf_output = BytesIO()
+    pdf.output(pdf_output)
+    st.download_button("تحميل الفاتورة", data=pdf_output.getvalue(), file_name="invoice.pdf")
 
     # رابط واتساب
     wa_link = f"https://wa.me/?text={msg.replace(' ', '%20')}"
-    st.markdown(f"[مشاركة على واتساب]({wa_link})")
-    pdf.add_font("Arial", "", "arial.ttf", uni=True)
-pdf.set_font("Arial", size=14)
+    st.markdown(f"[مشاركة على واتساب]({wa_link})", unsafe_allow_html=True)
