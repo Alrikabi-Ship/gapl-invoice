@@ -1,39 +1,37 @@
-
 import streamlit as st
+from fpdf import FPDF
 import qrcode
 from io import BytesIO
-from fpdf import FPDF
 from PIL import Image
+from pathlib import Path
 
-# إعداد الصفحة
-st.set_page_config(page_title="نموذج توليد فاتورة GAPL", layout="centered")
+st.set_page_config(page_title="فاتورة GAPL", page_icon="🧾")
 st.title("نموذج توليد فاتورة PDF - GAPL")
-st.markdown("املأ البيانات التالية لتوليد فاتورة رسمية بصيغة PDF")
+st.markdown("أدخل معلومات السيارة لإنشاء الفاتورة الرسمية.")
 
-# from pathlib import Pathنموذج الإدخال
+# إدخال البيانات
 supplier = st.text_input("اسم المورد")
 dealer = st.text_input("اسم التاجر")
 car_type = st.text_input("نوع السيارة")
 car_model = st.text_input("موديل السيارة")
-purchase_date = st.date_input("تاريخ شراء السيارة")
+purchase_date = st.date_input("تاريخ الشراء")
 payment_date = st.date_input("تاريخ الدفع")
 amount_paid = st.text_input("المبلغ المدفوع")
 total_amount = st.text_input("إجمالي الصفقة")
 balance = st.text_input("الرصيد المتبقي")
-status = st.selectbox("حالة الصفقة", ["قيد التنفيذ", "تم التسليم", "ملغاة"])
+status = st.selectbox("حالة الصفقة", ["قيد التنفيذ", "مكتملة", "ملغاة"])
 notes = st.text_area("ملاحظات")
-logo_path = "gapl_logo.png"
 
+# توليد الفاتورة
 if st.button("توليد الفاتورة"):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=14)
 
+    logo_path = "logo.png"
     if Path(logo_path).exists():
         pdf.image(logo_path, x=10, y=8, w=33)
-        pdf.ln(30)
-    pdf.cell(0, 10, "فاتورة مفصلة", ln=True, align='C')
-    pdf.ln(10)
+        pdf.ln(25)
 
     def row(label, value):
         pdf.cell(60, 10, label, border=1)
@@ -59,11 +57,12 @@ if st.button("توليد الفاتورة"):
     qr_bytes = BytesIO()
     qr.save(qr_bytes, format="PNG")
     qr_bytes.seek(0)
-    pdf.image(qr_bytes, x=80, w=50)
 
-    pdf.ln(10)
-    pdf.cell(0, 10, "قسم: مدير قسم الاستيراد", ln=True)
+    qr_path = "qr_temp.png"
+    with open(qr_path, "wb") as f:
+        f.write(qr_bytes.read())
+    pdf.image(qr_path, x=80, w=50)
 
-    pdf_output = BytesIO()
-    pdf.output(pdf_output)
-    st.download_button("تحميل الفاتورة PDF", data=pdf_output.getvalue(), file_name="invoice.pdf")
+    pdf.output("invoice.pdf")
+    with open("invoice.pdf", "rb") as f:
+        st.download_button("تحميل الفاتورة PDF", data=f, file_name="invoice.pdf")
