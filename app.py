@@ -69,3 +69,5 @@ if st.button("توليد الفاتورة"):
     # رابط واتساب
     wa_link = f"https://wa.me/?text={msg.replace(' ', '%20')}"
     st.markdown(f"[مشاركة على واتساب]({wa_link})")
+    pdf.add_font("Arial", "", "arial.ttf", uni=True)
+pdf.set_font("Arial", size=14)
