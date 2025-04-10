@@ -10,7 +10,7 @@ st.set_page_config(page_title="نموذج توليد فاتورة GAPL", layout=
 st.title("نموذج توليد فاتورة PDF - GAPL")
 st.markdown("املأ البيانات التالية لتوليد فاتورة رسمية بصيغة PDF")
 
-# نموذج الإدخال
+# from pathlib import Pathنموذج الإدخال
 supplier = st.text_input("اسم المورد")
 dealer = st.text_input("اسم التاجر")
 car_type = st.text_input("نوع السيارة")
