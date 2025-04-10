@@ -31,7 +31,17 @@ if st.button("توليد الفاتورة"):
     pdf.add_page()
 
     # شعار الشركة
-    pdf.image("logo.png", x=80, w=50)
+    # إنشاء باركود وحفظه مؤقتاً
+qr = qrcode.make(wa_link)
+qr_path = "qr_temp.png"
+qr.save(qr_path)
+
+# إدراج الصورة بالـ PDF
+pdf.image(qr_path, x=80, w=50)
+
+# حذف الصورة بعد الاستخدام (اختياري)
+import os
+os.remove(qr_path)
     pdf.set_font("Arial", size=14)
 
     def row(label, value):
