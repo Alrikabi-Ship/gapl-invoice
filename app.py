@@ -6,9 +6,7 @@ from fpdf import FPDF
 from PIL import Image
 
 # إعداد الصفحة
-st.set_page_config(page_title="فاتورة GAPL")
-
-# عنوان التطبيق
+st.set_page_config(page_title="نموذج توليد فاتورة GAPL", layout="centered")
 st.title("نموذج توليد فاتورة PDF - GAPL")
 st.markdown("املأ البيانات التالية لتوليد فاتورة رسمية بصيغة PDF")
 
@@ -22,27 +20,20 @@ payment_date = st.date_input("تاريخ الدفع")
 amount_paid = st.text_input("المبلغ المدفوع")
 total_amount = st.text_input("إجمالي الصفقة")
 balance = st.text_input("الرصيد المتبقي")
-status = st.selectbox("حالة الصفقة", ["قيد التنفيذ", "مدفوعة", "ملغاة"])
+status = st.selectbox("حالة الصفقة", ["قيد التنفيذ", "تم التسليم", "ملغاة"])
 notes = st.text_area("ملاحظات")
+logo_path = "gapl_logo.png"
 
-# زر التوليد
 if st.button("توليد الفاتورة"):
     pdf = FPDF()
     pdf.add_page()
-
-    # شعار الشركة
-    # إنشاء باركود وحفظه مؤقتاً
-qr = qrcode.make(wa_link)
-qr_path = "qr_temp.png"
-qr.save(qr_path)
-
-# إدراج الصورة بالـ PDF
-pdf.image(qr_path, x=80, w=50)
-
-# حذف الصورة بعد الاستخدام (اختياري)
-import os
-os.remove(qr_path)
     pdf.set_font("Arial", size=14)
+
+    if Path(logo_path).exists():
+        pdf.image(logo_path, x=10, y=8, w=33)
+        pdf.ln(30)
+    pdf.cell(0, 10, "فاتورة مفصلة", ln=True, align='C')
+    pdf.ln(10)
 
     def row(label, value):
         pdf.cell(60, 10, label, border=1)
@@ -60,22 +51,19 @@ os.remove(qr_path)
     row("حالة الصفقة", status)
     row("ملاحظات", notes)
 
-    # توليد QR code
-    msg = f"فاتورة GAPL من {dealer}، نوع السيارة: {car_type}، المبلغ: {amount_paid}"
-    qr = qrcode.make(msg)
+    msg = f"فاتورة GAPL:\nالتاجر: {dealer}\nنوع السيارة: {car_type}\nالمبلغ: {amount_paid}"
+    wa_link = f"https://wa.me/?text={msg.replace(' ', '%20')}"
+    st.markdown(f"[مشاركة على واتساب]({wa_link})")
+
+    qr = qrcode.make(wa_link)
     qr_bytes = BytesIO()
     qr.save(qr_bytes, format="PNG")
     qr_bytes.seek(0)
     pdf.image(qr_bytes, x=80, w=50)
 
     pdf.ln(10)
-    pdf.cell(0, 10, "تمت بواسطة GAPL", ln=True)
+    pdf.cell(0, 10, "قسم: مدير قسم الاستيراد", ln=True)
 
-    # حفظ PDF
-    output = BytesIO()
-    pdf.output(output)
-    st.download_button(label="تحميل الفاتورة", data=output.getvalue(), file_name="invoice.pdf", mime="application/pdf")
-
-    # مشاركة واتساب
-    wa_link = f"https://wa.me/?text={msg.replace(' ', '%20')}"
-    st.markdown(f"[مشاركة على واتساب]({wa_link})")
+    pdf_output = BytesIO()
+    pdf.output(pdf_output)
+    st.download_button("تحميل الفاتورة PDF", data=pdf_output.getvalue(), file_name="invoice.pdf")
