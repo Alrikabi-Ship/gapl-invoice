@@ -1,4 +1,2 @@
 streamlit
-fpdf
-qrcode
-pillow
+fpdf==1.7.2
